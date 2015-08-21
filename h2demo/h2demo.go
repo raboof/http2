@@ -289,7 +289,8 @@ func newGopherTilesHandler() http.Handler {
 		}
 		cacheBust := time.Now().UnixNano()
 
-		if p, ok := w.(http2.Pusher); ok {
+		push, _ := strconv.ParseBool(r.FormValue("push"))
+		if p, ok := w.(http2.Pusher); push && ok {
 			for y := 0; y < yt; y++ {
 				for x := 0; x < xt; x++ {
 					path := fmt.Sprintf("/gophertiles?x=%d&y=%d&cachebust=%d&latency=%d", x, y, cacheBust, ms)
@@ -302,10 +303,9 @@ func newGopherTilesHandler() http.Handler {
 		fmt.Fprintf(w, "A grid of %d tiled images is below. Compare:<p>", xt*yt)
 		for _, ms := range []int{0, 30, 200, 1000} {
 			d := time.Duration(ms) * nanosPerMilli
-			fmt.Fprintf(w, "[<a href='https://%s/gophertiles?latency=%d'>HTTP/2, %v latency</a>] [<a href='http://%s/gophertiles?latency=%d'>HTTP/1, %v latency</a>]<br>\n",
-				httpsHost(), ms, d,
-				httpHost(), ms, d,
-			)
+			fmt.Fprintf(w, "[<a href='https://%s/gophertiles?latency=%d&push=true'>HTTP/2, %v latency</a>] ", httpsHost(), ms, d)
+			fmt.Fprintf(w, "[<a href='https://%s/gophertiles?latency=%d&push=false'>HTTP/2 without Server Push, %v latency</a>] ", httpsHost(), ms, d)
+			fmt.Fprintf(w, "[<a href='http://%s/gophertiles?latency=%d'>HTTP/1, %v latency</a>]<br>\n", httpHost(), ms, d)
 		}
 		io.WriteString(w, "<p>\n")
 		for y := 0; y < yt; y++ {
