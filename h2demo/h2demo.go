@@ -299,6 +299,9 @@ func newGopherTilesHandler() http.Handler {
 			}
 		}
 
+		if ms <= 1000 {
+			time.Sleep(time.Duration(ms) * nanosPerMilli)
+		}
 		io.WriteString(w, "<html><body>")
 		fmt.Fprintf(w, "A grid of %d tiled images is below. Compare:<p>", xt*yt)
 		for _, ms := range []int{0, 30, 200, 1000} {
